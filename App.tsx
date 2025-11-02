@@ -155,9 +155,9 @@ interface QuestionModalProps {
 
 const QuestionModal: React.FC<QuestionModalProps> = ({ question, onYes }) => {
     const containerRef = useRef<HTMLDivElement>(null);
-    const [noPosition, setNoPosition] = useState({ top: 150, left: 250 });
+    const [noPosition, setNoPosition] = useState({ top: -200, left: -200 }); // Start off-screen
 
-    const moveButton = () => {
+    const moveButton = useCallback(() => {
         if (containerRef.current) {
             const { clientWidth, clientHeight } = containerRef.current;
             const buttonWidth = 90; // approximate width of the button
@@ -168,7 +168,13 @@ const QuestionModal: React.FC<QuestionModalProps> = ({ question, onYes }) => {
 
             setNoPosition({ top: newTop, left: newLeft });
         }
-    };
+    }, []);
+
+    useEffect(() => {
+      // Set initial position after the component mounts
+      const timer = setTimeout(moveButton, 100);
+      return () => clearTimeout(timer);
+    }, [moveButton]);
 
     return (
         <div className="fixed inset-0 bg-gray-900/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
@@ -185,13 +191,17 @@ const QuestionModal: React.FC<QuestionModalProps> = ({ question, onYes }) => {
                 </button>
                 <button
                     onMouseEnter={moveButton}
+                    onTouchStart={(e) => {
+                        e.preventDefault(); // Prevents click event on touch devices
+                        moveButton();
+                    }}
                     style={{
                         position: 'absolute',
                         top: `${noPosition.top}px`,
                         left: `${noPosition.left}px`,
                         transition: 'top 0.3s ease, left 0.3s ease',
                     }}
-                    className="px-8 py-3 bg-red-500 text-white font-semibold rounded-lg shadow-lg hover:bg-red-600"
+                    className="px-8 py-3 bg-red-500 text-white font-semibold rounded-lg shadow-lg"
                 >
                     No
                 </button>
